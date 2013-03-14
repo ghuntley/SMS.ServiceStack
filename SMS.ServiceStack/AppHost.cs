@@ -1,5 +1,6 @@
 ﻿namespace SMS.ServiceStack
 {
+    using System;
     using System.Net;
     using System.Reflection;
 
@@ -19,11 +20,14 @@
     using global::ServiceStack.Logging.Log4Net;
     using global::ServiceStack.OrmLite;
     using global::ServiceStack.Razor;
+    using global::ServiceStack.ServiceHost;
     using global::ServiceStack.ServiceInterface;
     using global::ServiceStack.ServiceInterface.Auth;
     using global::ServiceStack.ServiceInterface.Validation;
     using global::ServiceStack.Text;
     using global::ServiceStack.WebHost.Endpoints;
+    using global::ServiceStack.WebHost.Endpoints.Extensions;
+    using global::ServiceStack.WebHost.Endpoints.Support;
 
     public abstract class AppHost : AppHostHttpListenerBase
     {
@@ -80,6 +84,32 @@
             this.PreRequestFilters.Add(new TokenFilter(this.appSettings).Filter());
         }
 
+        protected override void ProcessRequest(HttpListenerContext context)
+        {
+            if (string.IsNullOrEmpty(context.Request.RawUrl)) return;
+
+            var operationName = context.Request.GetOperationName();
+
+            var httpReq = new SelfHostedHttpListenerRequestWrapper(operationName, context.Request);
+            var httpRes = new HttpListenerResponseWrapper(context.Response);
+            var handler = ServiceStackHttpHandlerFactory.GetHandler(httpReq);
+
+            var serviceStackHandler = handler as IServiceStackHttpHandler;
+            if (serviceStackHandler != null)
+            {
+                var restHandler = serviceStackHandler as RestHandler;
+                if (restHandler != null)
+                {
+                    httpReq.OperationName = operationName = restHandler.RestPath.RequestType.Name;
+                }
+                serviceStackHandler.ProcessRequest(httpReq, httpRes, operationName);
+                httpRes.Close();
+                return;
+            }
+
+            throw new NotImplementedException("Cannot execute handler: " + handler + " at PathInfo: " + httpReq.PathInfo);
+        }
+
         protected void LoadCertificates()
         {
             var tokenCertificate = this.appSettings.Get<string>("TokenCertificate", null);
@@ -111,6 +141,45 @@
                     new CentralStationOAuth2Provider(this.appSettings, this.appSettings.GetString("CentralStationUri")), 
                                     })
                 { HtmlRedirect = "/login" });
+        }
+
+        internal class SelfHostedHttpListenerRequestWrapper : HttpListenerRequestWrapper, IHttpRequest
+        {
+            public static string HttpForwardedProtoHeaderName = "X-Forwarded-Proto";
+
+            public string ForwaredProto
+            {
+                get
+                {
+                    return this.forwardedProto;
+                }
+            }
+
+            private readonly string forwardedProto;
+
+            public SelfHostedHttpListenerRequestWrapper(string operationName, HttpListenerRequest request)
+                : base(operationName, request)
+            {
+                this.forwardedProto = request.Headers[HttpForwardedProtoHeaderName];
+            }
+
+            public new bool IsSecureConnection
+            {
+                get
+                {
+                    return base.Request.IsSecureConnection || (this.ForwaredProto != null && "HTTPS".Equals(this.ForwaredProto, StringComparison.OrdinalIgnoreCase));
+                }
+            }
+
+            public new string AbsoluteUri
+            {
+                get
+                {
+                    return (this.IsSecureConnection)
+                               ? "https://" + base.Request.UserHostName + base.Request.RawUrl
+                               : "http://" + base.Request.UserHostName + base.Request.RawUrl;
+                }
+            }
         }
     }
 }

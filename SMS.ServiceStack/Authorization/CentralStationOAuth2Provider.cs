@@ -91,12 +91,12 @@ namespace SMS.ServiceStack.Authorization
             };
 
             this.client = new WebServerClient(authServerDescription, this.ApplicationId) { ClientCredentialApplicator = ClientCredentialApplicator.PostParameter(this.ApplicationSecret) };
-            this.SessionExpiry = TimeSpan.FromDays(7 * 2);
+            SessionExpiry = TimeSpan.FromDays(7 * 2);
         }
 
         public object Authenticate(IServiceBase authService, IAuthSession session, Auth request)
         {
-            var tokens = this.Init(authService, ref session, request);
+            var tokens = Init(authService, ref session, request);
 
             var code = authService.RequestContext.Get<IHttpRequest>().QueryString["code"];
             var isPreAuthCallback = !code.IsNullOrEmpty() || !request.UserName.IsNullOrEmpty();
@@ -107,7 +107,7 @@ namespace SMS.ServiceStack.Authorization
                 uri = RemoveQueryStringFromUri(uri);
                 state.Callback = new Uri(uri);
 
-                foreach (var permission in this.AllPermissions)
+                foreach (var permission in AllPermissions)
                 {
                     state.Scope.Add(permission);
                 }
@@ -135,13 +135,13 @@ namespace SMS.ServiceStack.Authorization
                 if (!request.UserName.IsNullOrEmpty())
                 {
                     session.ReferrerUrl = authService.RequestContext.Get<IHttpRequest>().QueryString["Continue"];
-                    auth = this.client.ExchangeUserCredentialForToken(
-                        request.UserName, request.Password, this.AllPermissions);
+                    auth = client.ExchangeUserCredentialForToken(
+                        request.UserName, request.Password, AllPermissions);
                 }
                 else
                 {
-                    auth = this.client.ProcessUserAuthorization(HttpRequestInfo.Create(
-                        (HttpListenerRequest)authService.RequestContext.Get<IHttpRequest>().OriginalRequest));
+                    var r = authService.RequestContext.Get<IHttpRequest>();
+                    auth = client.ProcessUserAuthorization(HttpRequestInfo.Create(r.HttpMethod, new Uri(r.AbsoluteUri), r.FormData, r.Headers));
                 }
 
                 if (auth.AccessToken == null && !request.UserName.IsNullOrEmpty())
@@ -184,9 +184,9 @@ namespace SMS.ServiceStack.Authorization
                 || session.ReferrerUrl.IndexOf("/auth", StringComparison.OrdinalIgnoreCase) >= 0)
                 session.ReferrerUrl = ServiceStackHttpHandlerFactory.GetBaseUrl() ?? requestUri.Substring(0, requestUri.IndexOf("/", "https://".Length + 1, StringComparison.Ordinal));
 
-            var tokens = session.ProviderOAuthAccess.FirstOrDefault(x => x.Provider == this.Provider);
+            var tokens = session.ProviderOAuthAccess.FirstOrDefault(x => x.Provider == Provider);
             if (tokens == null)
-                session.ProviderOAuthAccess.Add(tokens = new OAuthTokens { Provider = this.Provider });
+                session.ProviderOAuthAccess.Add(tokens = new OAuthTokens { Provider = Provider });
 
             return tokens;
         }
@@ -248,7 +248,7 @@ namespace SMS.ServiceStack.Authorization
             var userSession = session as AuthUserSession;
             if (userSession != null)
             {
-                this.LoadUserAuthInfo(userSession, tokens, authInfo);
+                LoadUserAuthInfo(userSession, tokens, authInfo);
             }
 
             if (tokens != null)
@@ -273,7 +273,7 @@ namespace SMS.ServiceStack.Authorization
                 httpRes.Cookies.AddPermanentCookie(HttpHeaders.XUserAuthId, session.UserAuthId);
             }
 
-            authService.SaveSession(session, this.SessionExpiry);
+            authService.SaveSession(session, SessionExpiry);
             session.OnAuthenticated(authService, session, tokens, authInfo);
         }
 
@@ -354,12 +354,12 @@ namespace SMS.ServiceStack.Authorization
 
         public void SetAuthorizationState(OutgoingWebResponse outgoingResponse)
         {
-            outgoingResponse.Headers[HttpResponseHeader.Location] += "&state=" + Uri.EscapeDataString(this.service.GetSessionId());
+            outgoingResponse.Headers[HttpResponseHeader.Location] += "&state=" + Uri.EscapeDataString(service.GetSessionId());
         }
 
         public IAuthorizationState GetAuthorizationState(Uri callbackUrl, string clientState)
         {
-            var cookie = ((HttpListenerRequest)this.service.RequestContext.Get<IHttpRequest>().OriginalRequest).Cookies[CookieName];
+            var cookie = (service.RequestContext.Get<IHttpRequest>()).Cookies[CookieName];
             if (cookie != null && cookie.Value == clientState)
             {
                 return new AuthorizationState { Callback = callbackUrl };
