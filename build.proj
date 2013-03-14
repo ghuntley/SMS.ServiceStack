@@ -1,0 +1,76 @@
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <PropertyGroup>
+        <MSBuildCommunityTasksPath>..\tools\</MSBuildCommunityTasksPath>
+        <StyleCopPath>.\build-packages\StyleCop.MSBuild\tools</StyleCopPath>
+        <NunitPath>.\build-packages\NUnit.Runners\tools</NunitPath>
+        <OpenCoverPath>.\build-packages\OpenCover</OpenCoverPath>
+        <ReportGeneratorPath>.\build-packages\ReportGenerator</ReportGeneratorPath>
+        <OutputPath>$(MSBuildProjectDirectory)\Output\</OutputPath>
+		<BuildOutputPath>$(MSBuildProjectDirectory)\BuildOutput\</BuildOutputPath>
+        <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">$(MSBuildProjectDirectory)</SolutionDir>
+    </PropertyGroup>
+    <Import Project=".\build-packages\MSBuildTasks\tools\MSBuild.Community.Tasks.Targets" /> 
+
+    <UsingTask AssemblyFile="$(StyleCopPath)\StyleCop.dll" TaskName="StyleCopTask"/>
+
+    <Target Name="Clean">
+        <RemoveDir Directories="$(BuildOutputPath)" />
+		<RemoveDir Directories="$(OutputPath)" />
+        <RemoveDir Directories=".\packages\" />
+    </Target>
+
+    <Target Name="Build">
+		 <MakeDir
+            Directories="$(BuildOutputPath)"/>
+        <ItemGroup>
+            <MainProject Include="SMS.ServiceStack\SMS.ServiceStack.csproj" />
+            <BuildProjects Include="**\*.csproj" />
+        </ItemGroup>
+        <Message Text=" ===========Building============" Importance="High" />
+        <MSBuild Projects="@(BuildProjects)" Targets="Build" 
+         Properties="Configuration=$(Configuration);SolutionDir=$(SolutionDir)\;OutDir=$(OutputPath)" />
+    </Target>
+
+    <Target Name="StyleCop" DependsOnTargets="Build">
+        <Message Text="===========Measuring Code Quality===========" />
+
+        <CreateItem Include="$(MSBuildProjectDirectory)\**\*.cs" Exclude="$(MSBuildProjectDirectory)\**\_*\**\*.cs;$(MSBuildProjectDirectory)\**\AssemblyInfo.cs">
+            <Output TaskParameter="Include" ItemName="StyleCopFiles"/>
+        </CreateItem>
+
+        <CreateItem Include="@(Compile)" Condition="('%(Compile.ExcludeFromStyleCop)' == 'true') or ('%(Compile.ExcludeFromSourceAnalysis)' == 'true')">
+            <Output TaskParameter="Include" ItemName="StyleCopExcludedFiles"/>
+        </CreateItem>
+        <!--&#x0d;&#x0a; = newline -->
+        <Message Text="Checking files: &#x0d;&#x0a;@(StyleCopFiles, '&#x0d;&#x0a;')" Importance="Normal" />
+        <StyleCopTask 
+                ProjectFullPath="$(MSBuildProjectDirectory)" 
+                SourceFiles="@(StyleCopFiles)"
+                ForceFullAnalysis="true"
+                CacheResults="false" 
+                TreatErrorsAsWarnings="true"
+                OutputFile="$(BuildOutputPath)StyleCopLog.xml">     
+        </StyleCopTask>
+    </Target>
+
+    <Target Name="Test" DependsOnTargets="Build">
+        <ItemGroup>
+            <TestFile Include="$(OutputPath)*Tests.dll" />
+            <JsTestFolder Include=".\SMS.ServiceStack\js\tests" />
+        </ItemGroup>
+        <Message Text="===========Tests===========" Importance="High" />
+        <Exec Command='$(OpenCoverPath)\OpenCover.Console.exe -target:"$(NunitPath)\nunit-console-x86.exe" -targetargs:"/noshadow $(OutputPath)CentralStationTest.dll" -filter:"+[*]* -[*Tests]* -[Moq]*" -output:"$(BuildOutputPath)Coverage.xml"' />
+        <Message Text="===========Generating Coverage Report===========" Importance="High" />
+        <Exec Command='$(ReportGeneratorPath)\ReportGenerator.exe "$(BuildOutputPath)Coverage.xml" "$(BuildOutputPath)Report"' />
+    </Target>
+	
+	<Target Name="CopyContentFiles">
+		<ItemGroup>
+			<WebFiles Include="$(MSBuildProjectDirectory)\SMS.ServiceStack\Web\**\*.*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(WebFiles)" DestinationFiles="@(WebFiles->'$(OutputPath)\Web\%(RecursiveDir)%(Filename)%(Extension)')"/>
+	</Target>
+
+    <Target Name="All" DependsOnTargets="Test; CopyContentFiles" />
+</Project>
