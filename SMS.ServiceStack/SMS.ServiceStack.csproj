@@ -14,6 +14,10 @@
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+	<BUILD_NUMBER Condition="'$(BUILD_NUMBER)' == ''">0</BUILD_NUMBER>
+    <Major>0</Major>
+    <Minor>1</Minor>
+    <Patch>0</Patch>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -126,9 +130,45 @@
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
+  -->
+  <Target Name="BeforeBuild" DependsOnTargets="AssemblyInfo">
   </Target>
   <Target Name="AfterBuild">
   </Target>
-  -->
+  <Target Name="AssemblyInfo">
+    <ItemGroup>
+      <AssemblyAttributes Include="AssemblyTitle">
+        <_Parameter1>SMS ServiceStack base</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="AssemblyDescription">
+        <_Parameter1>SMS ServiceStack base</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="AssemblyCompany">
+        <_Parameter1>Smart Meter Solutions b.v.</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="AssemblyProduct">
+        <_Parameter1>SMS ServiceStack base</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="AssemblyCopyright">
+        <_Parameter1>Copyright 2013 Smart Meter Solutions</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="AssemblyCulture">
+        <_Parameter1>
+        </_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="System.Runtime.InteropServices.Guid">
+        <_Parameter1>759f35cf-64b9-40ab-9180-5eeb9eac1719</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="AssemblyVersion">
+        <_Parameter1>$(Major).$(Minor).$(Patch).$(BUILD_NUMBER)</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="AssemblyFileVersion">
+        <_Parameter1>$(Major).$(Minor).$(Patch).$(BUILD_NUMBER)</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="AssemblyInformationalVersion">
+        <_Parameter1>$(Major).$(Minor).$(Patch).$(BUILD_NUMBER)</_Parameter1>
+      </AssemblyAttributes>
+    </ItemGroup>
+    <WriteCodeFragment Language="C#" OutputFile="Properties\AssemblyInfo.cs" AssemblyAttributes="@(AssemblyAttributes)" />
+  </Target>
 </Project>

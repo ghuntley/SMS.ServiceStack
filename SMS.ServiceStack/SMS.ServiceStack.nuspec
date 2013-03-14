@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>http://www.gnu.org/copyleft/lesser.html</licenseUrl>
+    <projectUrl>https://github.com/SmartMeterSolutions</projectUrl>
+    <iconUrl>https://secure.gravatar.com/avatar/ff8b8ac28762aed82c565c493cf12165?s=120</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>SMS ServiceStack base</description>
+    <releaseNotes>none</releaseNotes>
+    <copyright>Copyright 2013</copyright>
+    <tags></tags>
+    <dependencies>
+    </dependencies>
+  </metadata>
+</package>
