@@ -7,6 +7,7 @@
 namespace SMS.ServiceStack
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
 
@@ -24,38 +25,40 @@ namespace SMS.ServiceStack
     {
         protected static readonly ILog Logger = LogManager.GetLogger(typeof(T));
 
-        protected static Settings config = new Settings();
+        protected static Settings Config = new Settings
+            {
+                Dictionary =
+                    new Dictionary<string, string>()
+                        {
+                            { "ApplicationId", "Host" },
+                            { "ApplicationSecret", "some_password" },
+                            { "Database", "Data Source=.\\SQLExpress;Initial Catalog=Host;Integrated Security=SSPI" },
+                            { "CentralStationUri", "http://localhost:2337/" }
+                        }
+            };
 
-        protected static string applicationId = "Host";
+        protected static int Listen = 1337;
 
-        protected static int listen = 1337;
+        protected static string Path = "/";
 
-        protected static string databaseConnectionString = "Data Source=.\\SQLExpress;Initial%20Catalog=Host;Integrated%20Security=SSPI";
+        protected static string WebHostPhysicalPath = "./Web";
 
-        protected static string path = "/";
-
-        protected static string webHostPhysicalPath = "./Web";
-
-        protected static string centralStationUri = "http://localhost:2337/";
-
-        protected static string applicationSecret = "some_password";
-
-        protected static bool showHelp = false;
+        protected static bool ShowHelp = false;
 
         protected static OptionSet Options = new OptionSet()
                 {
-                    { "applicationId=", "Application name that can be used to identify the process", a => applicationId = a },
-                    { "applicationSecret=", "Application secret that can be used to identify the process", s => applicationSecret = s },
-                    { "c|contentPath=", "content location (templates, img, ...)", v => webHostPhysicalPath = v },
-                    { "d|database=", "database connectionstring", v => databaseConnectionString = v },
-                    { "l|listen=", "port to listen on", v => listen = int.Parse(v) },
-                    { "p|path=", "path to listen on, omit first slash and add trailing slash", v => path = v },
-                    { "h|help",  "show this message and exit", v => showHelp = v != null },
-                    { "tokenCertificate=",  "used for access token signing key", v => config.Dictionary.Add("TokenCertificate", v) },
-                    { "tokenPassword=",  "used for access token signing key", v => config.Dictionary.Add("TokenPassword", v) },
-                    { "resourceCertificate=",  "used for resource server encryption key", v => config.Dictionary.Add("ResourceCertificate", v) },
-                    { "resourcePassword=",  "used for resource server encryption key", v => config.Dictionary.Add("ResourcePassword", v) },
-                    { "centralStation=", "CS uri", u => centralStationUri = u }
+                    { "applicationId=", "Application name that can be used to identify the process", a => Config.Dictionary["ApplicationId"] = a },
+                    { "applicationSecret=", "Application secret that can be used to identify the process", s => Config.Dictionary["ApplicationSecret"] = s },
+                    { "c|contentPath=", "content location (templates, img, ...)", v => WebHostPhysicalPath = v },
+                    { "d|database=", "database connectionstring", v => Config.Dictionary["Database"] = Uri.UnescapeDataString(v) },
+                    { "l|listen=", "port to listen on", v => Listen = int.Parse(v) },
+                    { "p|path=", "path to listen on, omit first slash and add trailing slash", v => Path = v },
+                    { "h|help",  "show this message and exit", v => ShowHelp = v != null },
+                    { "tokenCertificate=",  "used for access token signing key", v => Config.Dictionary.Add("TokenCertificate", v) },
+                    { "tokenPassword=",  "used for access token signing key", v => Config.Dictionary.Add("TokenPassword", v) },
+                    { "resourceCertificate=",  "used for resource server encryption key", v => Config.Dictionary.Add("ResourceCertificate", v) },
+                    { "resourcePassword=",  "used for resource server encryption key", v => Config.Dictionary.Add("ResourcePassword", v) },
+                    { "centralStation=", "CS uri", u => Config.Dictionary["CentralStationUri"] = u }
                 };
 
         protected static void MainBase(string[] args)
@@ -70,26 +73,19 @@ namespace SMS.ServiceStack
                 Console.WriteLine(e.Message);
             }
 
-            if (showHelp)
+            if (ShowHelp)
             {
                 Console.WriteLine("Options: ");
                 Options.WriteOptionDescriptions(Console.Out);
                 return;
             }
 
-            EndpointHostConfig.Instance.WebHostUrl = path;
-            EndpointHostConfig.Instance.WebHostPhysicalPath = webHostPhysicalPath;
+            EndpointHostConfig.Instance.WebHostUrl = Path;
+            EndpointHostConfig.Instance.WebHostPhysicalPath = WebHostPhysicalPath;
 
-            databaseConnectionString = Uri.UnescapeDataString(databaseConnectionString);
-
-            config.Dictionary.Add("ApplicationId", applicationId);
-            config.Dictionary.Add("ApplicationSecret", applicationSecret);
-            config.Dictionary.Add("CentralStationUri", centralStationUri);
-            config.Dictionary.Add("Database", databaseConnectionString);
-
-            var appHost = (T)Activator.CreateInstance(typeof(T), new object[] { config, applicationId, typeof(T).Assembly });
+            var appHost = (T)Activator.CreateInstance(typeof(T), new object[] { Config, Config.Dictionary["ApplicationId"], typeof(T).Assembly });
             appHost.Init();
-            var listenOn = "http://+:{0}{1}".Fmt(listen, path);
+            var listenOn = "http://+:{0}{1}".Fmt(Listen, Path);
 
             //netsh http add urlacl url=http://+:[portnumber]/ user=[username]
             appHost.Start(listenOn);
