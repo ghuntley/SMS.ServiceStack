@@ -10,9 +10,11 @@ namespace SMS.ServiceStack.Resource
 
     public static class Certificates
     {
-        private static X509Certificate2 tokenCertificate = null;
+        private static X509Certificate2 tokenCertificate;
 
-        private static X509Certificate2 resourceCertificate = null;
+        private static X509Certificate2 resourceCertificate;
+
+        public static object loadLock = new object();
 
         private static bool hasCertificates = false;
 
@@ -43,7 +45,7 @@ namespace SMS.ServiceStack.Resource
 
         public static void LoadTokenCertificate(string file, string password)
         {
-            lock(tokenCertificate)
+            lock(loadLock)
             {
                 var cert = new X509Certificate2(file, password);
                 tokenCertificate = cert;
@@ -57,7 +59,7 @@ namespace SMS.ServiceStack.Resource
 
         public static void LoadResourceCertificate(string file, string password)
         {
-            lock(resourceCertificate)
+            lock(loadLock)
             {
                 var cert = new X509Certificate2(file, password);
                 resourceCertificate = cert;
