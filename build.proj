@@ -16,7 +16,6 @@
 
     <Target Name="Clean">
         <RemoveDir Directories="$(BuildOutputPath)" />
-		<RemoveDir Directories="$(OutputPath)" />
         <RemoveDir Directories=".\packages\" />
     </Target>
 
@@ -29,7 +28,7 @@
         </ItemGroup>
         <Message Text=" ===========Building============" Importance="High" />
         <MSBuild Projects="@(BuildProjects)" Targets="Build" 
-         Properties="Configuration=$(Configuration);SolutionDir=$(SolutionDir)\;OutDir=$(OutputPath)" />
+         Properties="Configuration=$(Configuration);SolutionDir=$(SolutionDir)\" />
     </Target>
 
     <Target Name="StyleCop" DependsOnTargets="Build">

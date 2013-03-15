@@ -1,5 +1,5 @@
 Remove-Item SMS.ServiceStack.*.nupkg
 
-.\.nuget\NuGet.exe pack -Symbols .\SMS.ServiceStack\SMS.ServiceStack.csproj -Prop Configuration=Release -Build
+.\.nuget\NuGet.exe pack -Symbols .\SMS.ServiceStack\SMS.ServiceStack.csproj -Prop Configuration=Release
 $package = (Get-ChildItem * -include *.nupkg | Sort-Object Name)[0].Name;
 .\.nuget\NuGet.exe push $package $env:NuGetApiKey
