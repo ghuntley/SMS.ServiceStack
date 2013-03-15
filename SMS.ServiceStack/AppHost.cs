@@ -54,7 +54,7 @@
             JsConfig.DateHandler = JsonDateHandler.ISO8601;
 
             container.Register<IDbConnectionFactory>(
-                new OrmLiteConnectionFactory(connectionString, false, SqlServerDialect.Provider));
+                new OrmLiteConnectionFactory(connectionString, SqlServerDialect.Provider));
 
             Log.CustomAdoNetAppender.StaticConnectionString = connectionString;
             LogManager.LogFactory = new Log4NetFactory(true);
