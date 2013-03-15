@@ -31,7 +31,7 @@
 
     public abstract class AppHost : AppHostHttpListenerBase
     {
-        private readonly IResourceManager appSettings;
+        protected readonly IResourceManager appSettings;
 
         public bool IsCentralStation = false;
 
