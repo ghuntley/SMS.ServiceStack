@@ -33,6 +33,8 @@
     {
         private readonly IResourceManager appSettings;
 
+        public bool IsCentralStation = false;
+
         protected AppHost()
         {
         }
@@ -138,7 +140,7 @@
 
             Plugins.Add(new AuthFeature(() => new AuthUserSession(),
                 new IAuthProvider[] {
-                    new CentralStationOAuth2Provider(this.appSettings, this.appSettings.GetString("CentralStationUri")), 
+                    new CentralStationOAuth2Provider(this.appSettings, this.appSettings.GetString("CentralStationUri"), !this.IsCentralStation), 
                                     })
                 { HtmlRedirect = "/login" });
         }

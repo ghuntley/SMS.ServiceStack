@@ -72,25 +72,32 @@ namespace SMS.ServiceStack.Authorization
 
         private WebServerClient client;
 
-        public CentralStationOAuth2Provider(IResourceManager appSettings, string realm)
+        private readonly AuthorizationServerDescription authServerDescription;
+
+        private bool RequiresRemoteAuthentication;
+
+        private bool? authenticatesLocally = null;
+
+        public CentralStationOAuth2Provider(IResourceManager appSettings, string realm, bool requiresRemoteAuthentication)
         {
             this.applicationId = appSettings.GetString("ApplicationId");
             this.AuthRealm = realm;
             this.ApplicationId = appSettings.GetString("ApplicationId");
             this.ApplicationSecret = appSettings.GetString("ApplicationSecret");
+            this.RequiresRemoteAuthentication = requiresRemoteAuthentication;
 
             this.RequestTokenUrl = realm + "oauth/token";
             this.AuthorizeUrl = realm + "oauth/auth";
             this.TokenInfoUrl = realm + "oauth/tokeninfo";
 
-            var authServerDescription = new AuthorizationServerDescription
+            this.authServerDescription = new AuthorizationServerDescription
             {
                 AuthorizationEndpoint = new Uri(this.AuthorizeUrl),
                 TokenEndpoint = new Uri(this.RequestTokenUrl),
                 ProtocolVersion = ProtocolVersion.V20
             };
 
-            this.client = new WebServerClient(authServerDescription, this.ApplicationId) { ClientCredentialApplicator = ClientCredentialApplicator.PostParameter(this.ApplicationSecret) };
+            this.client = new WebServerClient(this.authServerDescription, this.ApplicationId) { ClientCredentialApplicator = ClientCredentialApplicator.PostParameter(this.ApplicationSecret) };
             SessionExpiry = TimeSpan.FromDays(7 * 2);
         }
 
@@ -173,6 +180,17 @@ namespace SMS.ServiceStack.Authorization
             }
 
             var requestUri = authService.RequestContext.AbsoluteUri;
+
+            if (this.authenticatesLocally == null)
+            {
+                this.authenticatesLocally = this.authServerDescription.AuthorizationEndpoint.Authority == new Uri(requestUri).Authority;
+            }
+
+            if (!this.RequiresRemoteAuthentication != this.authenticatesLocally.Value)
+            {
+                throw new ArgumentException("Remote authentication and centralStation location incompatible.");
+            }
+
             if (this.CallbackUrl.IsNullOrEmpty())
                 this.CallbackUrl = requestUri;
 
