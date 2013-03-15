@@ -73,6 +73,8 @@
             config.AllowFileExtensions.Add("jpeg");
             config.AllowFileExtensions.Add("pdf");
             config.AllowFileExtensions.Add("woff");
+            config.AllowFileExtensions.Add("eot");
+            config.AllowFileExtensions.Add("ttf");
 
             this.SetConfig(config);
 
@@ -80,6 +82,8 @@
             this.LoadCertificates();
             
             Plugins.Add(new ValidationFeature());
+
+            container.Register<IResourceManager>(ast => this.appSettings);
 
             var cache = new MemoryCacheClient { FlushOnDispose = false };
             container.Register<ICacheClient>(cache);
