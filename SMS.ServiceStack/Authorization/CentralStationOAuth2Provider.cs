@@ -74,17 +74,12 @@ namespace SMS.ServiceStack.Authorization
 
         private readonly AuthorizationServerDescription authServerDescription;
 
-        private bool RequiresRemoteAuthentication;
-
-        private bool? authenticatesLocally = null;
-
-        public CentralStationOAuth2Provider(IResourceManager appSettings, string realm, bool requiresRemoteAuthentication)
+        public CentralStationOAuth2Provider(IResourceManager appSettings, string realm)
         {
             this.applicationId = appSettings.GetString("ApplicationId");
             this.AuthRealm = realm;
             this.ApplicationId = appSettings.GetString("ApplicationId");
             this.ApplicationSecret = appSettings.GetString("ApplicationSecret");
-            this.RequiresRemoteAuthentication = requiresRemoteAuthentication;
 
             this.RequestTokenUrl = realm + "oauth/token";
             this.AuthorizeUrl = realm + "oauth/auth";
@@ -180,17 +175,6 @@ namespace SMS.ServiceStack.Authorization
             }
 
             var requestUri = authService.RequestContext.AbsoluteUri;
-
-            if (this.authenticatesLocally == null)
-            {
-                this.authenticatesLocally = this.authServerDescription.AuthorizationEndpoint.Authority == new Uri(requestUri).Authority;
-            }
-
-            if (!this.RequiresRemoteAuthentication != this.authenticatesLocally.Value)
-            {
-                throw new ArgumentException("Remote authentication and centralStation location incompatible.");
-            }
-
             if (this.CallbackUrl.IsNullOrEmpty())
                 this.CallbackUrl = requestUri;
 
