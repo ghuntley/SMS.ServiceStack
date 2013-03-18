@@ -33,8 +33,6 @@
     {
         protected IResourceManager appSettings;
 
-        public bool IsCentralStation = false;
-
         protected AppHost()
         {
         }
