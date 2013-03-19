@@ -144,7 +144,7 @@
                 new IAuthProvider[] {
                     new CentralStationOAuth2Provider(this.appSettings, this.appSettings.GetString("CentralStationUri")), 
                                     })
-                { HtmlRedirect = "/login" });
+                { HtmlRedirect = "/auth/centralstation" });
         }
 
         internal class SelfHostedHttpListenerRequestWrapper : HttpListenerRequestWrapper, IHttpRequest
