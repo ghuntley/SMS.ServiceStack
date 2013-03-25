@@ -33,7 +33,8 @@ namespace SMS.ServiceStack
                             { "ApplicationId", "Host" },
                             { "ApplicationSecret", "some_password" },
                             { "Database", "Data Source=.\\SQLExpress;Initial Catalog=Host;Integrated Security=SSPI" },
-                            { "CentralStationUri", "http://localhost:2337/" }
+                            { "CentralStationUri", "http://localhost:2337/" },
+                            { "ApplicationHostUri", "http://localhost:1337/" }
                         }
             };
 
@@ -58,7 +59,8 @@ namespace SMS.ServiceStack
                     { "tokenPassword=",  "used for access token signing key", v => Config.Dictionary.Add("TokenPassword", v) },
                     { "resourceCertificate=",  "used for resource server encryption key", v => Config.Dictionary.Add("ResourceCertificate", v) },
                     { "resourcePassword=",  "used for resource server encryption key", v => Config.Dictionary.Add("ResourcePassword", v) },
-                    { "centralStation=", "CS uri", u => Config.Dictionary["CentralStationUri"] = u }
+                    { "centralStation=", "CS uri", u => Config.Dictionary["CentralStationUri"] = u },
+                    { "applicationHostURI=", "CS uri", u => Config.Dictionary["ApplicationHostUri"] = u }
                 };
 
         protected static void MainBase(string[] args)
