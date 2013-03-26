@@ -23,7 +23,7 @@ namespace SMS.ServiceStack.Config
         {
             string val = null;
             this.Dictionary.TryGetValue(key, out val);
-            return val ?? string.Empty;
+            return val;
         }
     }
 }
