@@ -26,6 +26,8 @@ namespace SMS.ServiceStack
 
     public abstract class ProgramBase<T> where T : AppHost
     {
+        protected static readonly Kernel32.HandlerRoutine HandlerRoutine = new Kernel32.HandlerRoutine(ConsoleCtrlCheck);
+
         protected static readonly ILog Logger = LogManager.GetLogger(typeof(T));
 
         protected static Settings Config = new Settings
@@ -104,7 +106,7 @@ namespace SMS.ServiceStack
                 Environment.Exit(0);
             };
 
-            Kernel32.SetConsoleCtrlHandler(new Kernel32.HandlerRoutine(ConsoleCtrlCheck), true);
+            Kernel32.SetConsoleCtrlHandler(HandlerRoutine, true);
 
             Logger.Warn("AppHost Created at {0}, listening on {1}".Fmt(DateTime.Now, listenOn));
             Logger.Warn("Type Ctrl+C to quit");
