@@ -31,6 +31,8 @@
 
     public abstract class AppHost : AppHostHttpListenerBase
     {
+        public event Action OnStop;
+
         protected IResourceManager appSettings;
 
         protected AppHost()
@@ -86,6 +88,15 @@
             var cache = new MemoryCacheClient { FlushOnDispose = false };
             container.Register<ICacheClient>(cache);
             this.PreRequestFilters.Add(new TokenFilter(this.appSettings).Filter());
+        }
+
+        public override void Stop()
+        {
+            if (OnStop != null)
+            {
+                OnStop();
+            }
+            base.Stop();
         }
 
         protected override void ProcessRequest(HttpListenerContext context)

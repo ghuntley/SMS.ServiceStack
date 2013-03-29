@@ -4,12 +4,15 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
+using System.Runtime.InteropServices;
+
 namespace SMS.ServiceStack
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
+    using System.Runtime.InteropServices;
 
     using Mono.Options;
 
@@ -37,6 +40,8 @@ namespace SMS.ServiceStack
                             { "ApplicationHostUri", "http://localhost:1337/" }
                         }
             };
+
+        public static event Action OnShutdown;
 
         protected static int Listen = 1337;
 
@@ -92,16 +97,46 @@ namespace SMS.ServiceStack
             //netsh http add urlacl url=http://+:[portnumber]/ user=[username]
             appHost.Start(listenOn);
 
-            Console.CancelKeyPress += delegate
+            OnShutdown += delegate
             {
                 Logger.Warn("Stopping application");
                 appHost.Stop();
+                Environment.Exit(0);
             };
+
+            Kernel32.SetConsoleCtrlHandler(new Kernel32.HandlerRoutine(ConsoleCtrlCheck), true);
 
             Logger.Warn("AppHost Created at {0}, listening on {1}".Fmt(DateTime.Now, listenOn));
             Logger.Warn("Type Ctrl+C to quit");
             Logger.Warn("-------------------");
             Thread.Sleep(Timeout.Infinite);
         }
+
+        private static bool ConsoleCtrlCheck(Kernel32.CtrlTypes ctrlType)
+        {
+            OnShutdown();
+            return true;
+        }
+    }
+
+    public static class Kernel32
+    {
+        #region unmanaged
+
+        [DllImport("Kernel32")]
+        public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
+
+        public delegate bool HandlerRoutine(CtrlTypes CtrlType);
+
+        public enum CtrlTypes
+        {
+            CTRL_C_EVENT = 0,
+            CTRL_BREAK_EVENT,
+            CTRL_CLOSE_EVENT,
+            CTRL_LOGOFF_EVENT = 5,
+            CTRL_SHUTDOWN_EVENT
+        }
+
+        #endregion
     }
 }
