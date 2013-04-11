@@ -38,7 +38,7 @@ namespace SMS.ServiceStack.Authorization
     {
         protected static readonly ILog Log = LogManager.GetLogger(typeof(AuthProvider));
 
-        public readonly List<string> AllScopes = new List<string> { "admin", "user" }; // not used?
+        public readonly List<string> AllScopes = new List<string> { "r/admin", "r/user" };
 
         public const string Name = "centralstation";
         public string provider = "centralstation";
