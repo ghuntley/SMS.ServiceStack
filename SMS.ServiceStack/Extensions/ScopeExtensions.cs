@@ -5,7 +5,7 @@ namespace SMS.ServiceStack.Extensions
 
     public static class ScopeExtensions
     {
-        public const string RoleNamespace = "s";
+        public const string RoleNamespace = "r";
 
         public const string PermissionNamespace = "p";
         
