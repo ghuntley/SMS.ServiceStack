@@ -17,6 +17,7 @@ namespace SMS.ServiceStack
     using Mono.Options;
 
     using SMS.ServiceStack.Config;
+    using SMS.ServiceStack.Types;
 
     using global::ServiceStack.Configuration;
     using global::ServiceStack.Text;
@@ -91,6 +92,25 @@ namespace SMS.ServiceStack
 
             EndpointHostConfig.Instance.WebHostUrl = Path;
             EndpointHostConfig.Instance.WebHostPhysicalPath = WebHostPhysicalPath;
+
+            //This needs to be called before the appHost.Init(), according to the documentation.
+            JsConfig<DateTimeUTC>.SerializeFn = r => JsonSerializer.SerializeToString(r.ToDateTime()).Replace("\"", String.Empty);
+            JsConfig<DateTimeUTC>.DeSerializeFn = r =>
+                {
+                    var date = JsonSerializer.DeserializeFromString<DateTime>(r);
+                    return date.Kind == DateTimeKind.Local ? DateTimeUTC.FromLocalTime(date) : DateTimeUTC.FromUTCTime(date);
+                };
+            JsConfig<DateTimeUTC?>.SerializeFn = r => r.HasValue ? JsonSerializer.SerializeToString(r.Value.ToDateTime()).Replace("\"", string.Empty) : null;
+            JsConfig<DateTimeUTC?>.DeSerializeFn = r =>
+            {
+                if(!string.IsNullOrEmpty(r))
+                {
+                    var date = JsonSerializer.DeserializeFromString<DateTime>(r);
+                    return date.Kind == DateTimeKind.Local ? DateTimeUTC.FromLocalTime(date) : DateTimeUTC.FromUTCTime(date);
+                }
+
+                return null;
+            };
 
             var appHost = (T)Activator.CreateInstance(typeof(T), new object[] { Config, Config.Dictionary["ApplicationId"], typeof(T).Assembly });
             appHost.Init();
