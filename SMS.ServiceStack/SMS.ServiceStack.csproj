@@ -113,6 +113,7 @@
     <Compile Include="Config\Options.cs" />
     <Compile Include="Config\Settings.cs" />
     <Compile Include="Extensions\ServiceExtensions.cs" />
+    <Compile Include="Extensions\ScopeExtensions.cs" />
     <Compile Include="Filters\TokenFilter.cs" />
     <Compile Include="Log\CustomAdoNetAppender.cs" />
     <Compile Include="Log\LogEntry.cs" />

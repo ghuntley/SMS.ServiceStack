@@ -30,13 +30,15 @@ namespace SMS.ServiceStack.Authorization
     using global::ServiceStack.Text;
     using global::ServiceStack.WebHost.Endpoints;
 
+    using SMS.ServiceStack.Extensions;
+
     using HttpHeaders = global::ServiceStack.Common.Web.HttpHeaders;
 
     public class CentralStationOAuth2Provider : IAuthProvider
     {
         protected static readonly ILog Log = LogManager.GetLogger(typeof(AuthProvider));
 
-        public readonly List<string> AllPermissions = new List<string> { "admin", "user" };
+        public readonly List<string> AllScopes = new List<string> { "admin", "user" }; // not used?
 
         public const string Name = "centralstation";
         public string provider = "centralstation";
@@ -109,7 +111,7 @@ namespace SMS.ServiceStack.Authorization
                 uri = RemoveQueryStringFromUri(uri);
                 state.Callback = new Uri(uri);
 
-                foreach (var permission in AllPermissions)
+                foreach (var permission in this.AllScopes)
                 {
                     state.Scope.Add(permission);
                 }
@@ -138,7 +140,7 @@ namespace SMS.ServiceStack.Authorization
                 {
                     session.ReferrerUrl = authService.RequestContext.Get<IHttpRequest>().QueryString["Continue"];
                     auth = client.ExchangeUserCredentialForToken(
-                        request.UserName, request.Password, AllPermissions);
+                        request.UserName, request.Password, this.AllScopes);
                 }
                 else
                 {
@@ -234,7 +236,8 @@ namespace SMS.ServiceStack.Authorization
             this.OnAuthenticated(authService, session, tokens, tokenDictionary);
 
             // save permissions after on autheticated, because it removes them;
-            session.Permissions = tokenInfo.Scope.ToList();
+            session.Roles = tokenInfo.Scope.GetRolesFromScope(this.applicationId);
+            session.Permissions = tokenInfo.Scope.GetPermissionsFromScope(this.applicationId);
             session.IsAuthenticated = true;
             authService.SaveSession(session, this.SessionExpiry);
 
