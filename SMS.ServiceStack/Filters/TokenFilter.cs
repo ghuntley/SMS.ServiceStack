@@ -15,6 +15,8 @@ namespace CentralStation.Filter
     using DotNetOpenAuth.Messaging;
     using DotNetOpenAuth.OAuth2;
 
+    using SMS.ServiceStack.Extensions;
+
     using ServiceStack.Configuration;
     using ServiceStack.Logging;
     using ServiceStack.ServiceHost;
@@ -69,7 +71,8 @@ namespace CentralStation.Filter
                                 session.UserName = token.User;
                                 session.UserAuthName = token.User;
                                 session.IsAuthenticated = true;
-                                session.Permissions = token.Scope.ToList();
+                                session.Roles = token.Scope.GetRolesFromScope(this.appSettings.Get("ApplicationId", string.Empty));
+                                session.Permissions = token.Scope.GetPermissionsFromScope(this.appSettings.Get("ApplicationId", string.Empty));
 
                                 session.ProviderOAuthAccess = new List<IOAuthTokens>
                                     { new OAuthTokens { Provider = "credentials" } };
