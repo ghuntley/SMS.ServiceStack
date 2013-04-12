@@ -11,6 +11,8 @@
     using SMS.ServiceStack.Authorization;
     using SMS.ServiceStack.Config;
     using SMS.ServiceStack.Log;
+    using SMS.ServiceStack.ORMLite;
+    using SMS.ServiceStack.Types;
 
     using global::ServiceStack.CacheAccess;
     using global::ServiceStack.CacheAccess.Providers;
@@ -54,7 +56,7 @@
             JsConfig.DateHandler = JsonDateHandler.ISO8601;
 
             container.Register<IDbConnectionFactory>(
-                new OrmLiteConnectionFactory(connectionString, SqlServerDialect.Provider));
+                new OrmLiteConnectionFactory(connectionString, SMSSqlServerDialect.Provider));
 
             Log.CustomAdoNetAppender.StaticConnectionString = connectionString;
             LogManager.LogFactory = new Log4NetFactory(true);
