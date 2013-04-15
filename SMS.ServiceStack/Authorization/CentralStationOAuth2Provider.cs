@@ -143,22 +143,43 @@ namespace SMS.ServiceStack.Authorization
 
             try
             {
+                var isHtml =
+                        authService.RequestContext.Get<IHttpRequest>().ResponseContentType.MatchesContentType(
+                        ContentType.Html);
                 IAuthorizationState auth;
                 if (!request.UserName.IsNullOrEmpty())
                 {
-                    session.ReferrerUrl = authService.RequestContext.Get<IHttpRequest>().QueryString["Continue"];
-                    auth = client.ExchangeUserCredentialForToken(
-                        request.UserName, request.Password, this.AllScopes);
+                    if (!request.Password.IsNullOrEmpty())
+                    {
+                        auth = client.ExchangeUserCredentialForToken(request.UserName, request.Password, this.AllScopes);
+                    } else
+                    {
+                        return (isHtml && authService.RequestContext.GetHeader("Referer") != null) 
+                            ? authService.Redirect(authService.RequestContext.GetHeader("Referer").AddHashParam("f", "BadUsernamePassword"))
+                            : new HttpResult(HttpStatusCode.Unauthorized);
+                    }
                 }
                 else
                 {
                     var r = authService.RequestContext.Get<IHttpRequest>();
-                    auth = client.ProcessUserAuthorization(HttpRequestInfo.Create(r.HttpMethod, new Uri(r.AbsoluteUri), r.FormData, r.Headers));
+                    try
+                    {
+                        auth = client.ProcessUserAuthorization(HttpRequestInfo.Create(r.HttpMethod, new Uri(r.AbsoluteUri), r.FormData, r.Headers));
+                    } 
+                    catch (ProtocolException e)
+                    {
+                        Log.Info("Protocol exception during processing of code", e);
+                        return isHtml 
+                            ? authService.Redirect(session.ReferrerUrl.AddHashParam("f", "UnauthorizedForApplication")) 
+                            : new HttpResult(HttpStatusCode.Unauthorized, "UnauthorizedForApplication");
+                    }
                 }
 
                 if (auth.AccessToken == null && !request.UserName.IsNullOrEmpty())
                 {
-                    return new HttpResult(HttpStatusCode.Unauthorized);
+                    return(isHtml && authService.RequestContext.GetHeader("Referer") != null)
+                        ? authService.Redirect(authService.RequestContext.GetHeader("Referer").AddHashParam("f", "BadUsernamePassword"))
+                        : new HttpResult(HttpStatusCode.Unauthorized);
                 }
                 return this.UseAccessTokenForAuthenticate(authService, session, auth, tokens);
 
@@ -192,13 +213,14 @@ namespace SMS.ServiceStack.Authorization
                 session.ReferrerUrl = (request != null ? request.Continue : null)
                     ?? authService.RequestContext.GetHeader("Referer");
 
-            if (session.ReferrerUrl.IsNullOrEmpty()
-                || session.ReferrerUrl.IndexOf("/auth", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (session.ReferrerUrl.IsNullOrEmpty())
                 session.ReferrerUrl = ServiceStackHttpHandlerFactory.GetBaseUrl() ?? requestUri.Substring(0, requestUri.IndexOf("/", "https://".Length + 1, StringComparison.Ordinal));
 
             var tokens = session.ProviderOAuthAccess.FirstOrDefault(x => x.Provider == Provider);
             if (tokens == null)
                 session.ProviderOAuthAccess.Add(tokens = new OAuthTokens { Provider = Provider });
+
+            authService.SaveSession(session);
 
             return tokens;
         }
@@ -233,23 +255,18 @@ namespace SMS.ServiceStack.Authorization
             var tv = new TokenValidator();
             tv.ValidateToken(tokenInfo, expectedAudience: this.applicationId);
 
-            /*
-                 * In OAuthProvider.IsAuthorized is written: return tokens != null && !string.IsNullOrEmpty(tokens.AccessTokenSecret);
-                 * So we better save it in AccessTokenSecret Rolf ;)
-                 * */
             tokens.AccessTokenSecret = auth.AccessToken;
             tokens.RequestTokenSecret = auth.RefreshToken;
             tokens.RefreshTokenExpiry = auth.AccessTokenExpirationUtc;
 
             this.OnAuthenticated(authService, session, tokens, tokenDictionary);
 
-            // save permissions after on autheticated, because it removes them;
+            // save permissions after on authenticated, because it removes them;
             session.Roles = tokenInfo.Scope.GetRolesFromScope(this.applicationId);
             session.Permissions = tokenInfo.Scope.GetPermissionsFromScope(this.applicationId);
             session.IsAuthenticated = true;
             authService.SaveSession(session, this.SessionExpiry);
 
-            // Haz access!
             var redirectUrl = session.ReferrerUrl.AddHashParam("s", "1");
             session.ReferrerUrl = null;
 
