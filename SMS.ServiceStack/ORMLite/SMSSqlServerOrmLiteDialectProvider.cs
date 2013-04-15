@@ -36,7 +36,7 @@ namespace SMS.ServiceStack.ORMLite
 
                 return base.ConvertDbValue(value, type);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }

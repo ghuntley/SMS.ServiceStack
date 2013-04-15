@@ -16,41 +16,19 @@ namespace SMS.ServiceStack.Types
     /// </summary>
     public struct DateTimeUTC
     {
-        private DateTime dateTime;
+        private readonly DateTime dateTime;
 
-        DateTimeUTC(DateTime dateTime)
+        public DateTimeUTC(DateTime dateTime)
         {
             this.dateTime = dateTime.Kind == DateTimeKind.Utc ? dateTime : new DateTime(dateTime.Ticks, DateTimeKind.Utc);
         }
 
-        public bool Equals(DateTimeUTC other)
+        public static DateTimeUTC Now
         {
-            if (ReferenceEquals(null, other))
+            get
             {
-                return false;
+                return new DateTimeUTC(DateTime.UtcNow);
             }
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-            return other.dateTime.Equals(this.dateTime);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-            if (obj.GetType() != typeof(DateTimeUTC))
-            {
-                return false;
-            }
-            return this.Equals((DateTimeUTC)obj);
         }
 
         public static bool operator <(DateTimeUTC left, DateTimeUTC right)
@@ -75,45 +53,65 @@ namespace SMS.ServiceStack.Types
 
         public static bool operator ==(DateTimeUTC left, DateTimeUTC right)
         {
-            return Equals(left, right);
+            return left.Equals(right);
         }
 
         public static bool operator !=(DateTimeUTC left, DateTimeUTC right)
         {
-            return !Equals(left, right);
-        }
-
-        public DateTime ToDateTime()
-        {
-            return dateTime;
-        }
-
-        public string ToString()
-        {
-            return dateTime.ToString();
-        }
-
-        public string ToString(string format)
-        {
-            return dateTime.ToString(format);
-        }
-
-        public static DateTimeUTC Now
-        {
-            get
-            {
-                return new DateTimeUTC(DateTime.UtcNow);
-            }
+            return !left.Equals(right);
         }
 
         public static DateTimeUTC FromLocalTime(DateTime dateTime)
         {
-            return new DateTimeUTC(dateTime.ToUniversalTime());
+            return new DateTimeUTC(new DateTime(dateTime.Ticks, DateTimeKind.Local).ToUniversalTime());
         }
 
         public static DateTimeUTC FromUTCTime(DateTime dateTime)
         {
             return new DateTimeUTC(dateTime);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return this.dateTime.GetHashCode();
+            }
+        }
+
+        public bool Equals(DateTimeUTC other)
+        {
+            return other.dateTime.Equals(this.dateTime);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (obj.GetType() != typeof(DateTimeUTC))
+            {
+                return false;
+            }
+
+            return this.Equals((DateTimeUTC)obj);
+        }
+
+        public DateTime ToDateTime()
+        {
+            return this.dateTime;
+        }
+
+        public new string ToString()
+        {
+            return this.dateTime.ToString();
+        }
+
+        public string ToString(string format)
+        {
+            return this.dateTime.ToString(format);
         }
     }
 }
