@@ -95,7 +95,7 @@
             this.PreRequestFilters.Add(new TokenFilter(this.appSettings).Filter());
         }
 
-        protected void Migrate(Container container)
+        protected void Migrate(Container container, Assembly assembly)
         {
             using (var db = container.Resolve<IDbConnectionFactory>().OpenDbConnection())
             {
@@ -108,7 +108,7 @@
             {
                 var dbMigrations = db.Select<Migration>().OrderBy(m => m.Version);
 
-                var migrations = Migrations.Migration.All;
+                var migrations = Migrations.Migration.All(assembly);
                 foreach (var migration in migrations)
                 {
                     var dbMigration = dbMigrations.Where(dbm => dbm.Version == migration.Version).FirstOrDefault();

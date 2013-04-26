@@ -12,6 +12,7 @@ namespace SMS.ServiceStack.Migrations
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
 
     using Funq;
 
@@ -50,13 +51,10 @@ namespace SMS.ServiceStack.Migrations
             }
         }
 
-        public static List<Migration> All
+        public static List<Migration> All(Assembly assembly)
         {
-            get
-            {
-                return typeof(Migration).Assembly.GetTypes().Where(t => t.BaseType == typeof(Migration)).Select(
+            return assembly.GetTypes().Where(t => t.BaseType == typeof(Migration)).Select(
                     t => (Migration)Activator.CreateInstance(t)).OrderBy(m => m.Version).ToList();
-            }
         }
     }
 }
