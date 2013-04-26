@@ -1,6 +1,7 @@
 ﻿namespace SMS.ServiceStack
 {
     using System;
+    using System.Linq;
     using System.Net;
     using System.Reflection;
 
@@ -11,8 +12,10 @@
     using SMS.ServiceStack.Authorization;
     using SMS.ServiceStack.Config;
     using SMS.ServiceStack.Log;
+    using SMS.ServiceStack.Migrations.Entities;
     using SMS.ServiceStack.ORMLite;
     using SMS.ServiceStack.Types;
+    using SMS.ServiceStack.Utility;
 
     using global::ServiceStack.CacheAccess;
     using global::ServiceStack.CacheAccess.Providers;
@@ -90,6 +93,58 @@
             var cache = new MemoryCacheClient { FlushOnDispose = false };
             container.Register<ICacheClient>(cache);
             this.PreRequestFilters.Add(new TokenFilter(this.appSettings).Filter());
+        }
+
+        protected void Migrate(Container container)
+        {
+            using (var db = container.Resolve<IDbConnectionFactory>().OpenDbConnection())
+            {
+                db.CreateTableIfNotExists<Migration>();
+            }
+
+            var factory = container.Resolve<IDbConnectionFactory>();
+
+            using (var db = factory.OpenDbConnection())
+            {
+                var dbMigrations = db.Select<Migration>().OrderBy(m => m.Version);
+
+                var migrations = Migrations.Migration.All;
+                foreach (var migration in migrations)
+                {
+                    var dbMigration = dbMigrations.Where(dbm => dbm.Version == migration.Version).FirstOrDefault();
+
+                    if (dbMigration == null)
+                    {
+                        using (var trans = db.OpenTransaction())
+                        {
+                            foreach (var sql in migration.Sqls)
+                            {
+                                db.ExecuteSql(sql);
+                            }
+
+                            trans.Commit();
+                        }
+
+                        migration.Migrate(container);
+
+                        var newDbMigration = new Migration
+                        {
+                            Id = CombGuid.NewGuid(),
+                            Version = migration.Version,
+                            Hash = migration.Hash,
+                            Time = DateTime.Now
+                        };
+                        db.Insert(newDbMigration);
+                    }
+                    else
+                    {
+                        if (dbMigration.Hash != migration.Hash)
+                        {
+                            // throw error? log?
+                        }
+                    }
+                }
+            }
         }
 
         public override void Stop()

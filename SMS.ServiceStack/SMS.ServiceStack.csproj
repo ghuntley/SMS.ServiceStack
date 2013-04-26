@@ -117,6 +117,8 @@
     <Compile Include="Filters\TokenFilter.cs" />
     <Compile Include="Log\CustomAdoNetAppender.cs" />
     <Compile Include="Log\LogEntry.cs" />
+    <Compile Include="Migrations\Entities\Migration.cs" />
+    <Compile Include="Migrations\Migration.cs" />
     <Compile Include="ORMLite\SMSSqlServerDialect.cs" />
     <Compile Include="ORMLite\SMSSqlServerOrmLiteDialectProvider.cs" />
     <Compile Include="ProgramBase.cs" />
@@ -124,6 +126,7 @@
     <Compile Include="Proxies\OAuthProxySettings.cs" />
     <Compile Include="Resource\Certificates.cs" />
     <Compile Include="Types\DateTimeUTC.cs" />
+    <Compile Include="Utility\CombGuid.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
