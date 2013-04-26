@@ -96,21 +96,28 @@ namespace SMS.ServiceStack.Extensions
 
         public static TResponse AppLinkGet<TResponse>(this OAuthProxySettings settings, global::ServiceStack.ServiceHost.IReturn<TResponse> request, AppAuthorizations authorizations)
         {
-            var rsa = (RSACryptoServiceProvider)Certificates.ResourceCertificate.PublicKey.Key;
+            if (Certificates.HasCertificates)
+            {
+                var rsa = (RSACryptoServiceProvider)Certificates.ResourceCertificate.PublicKey.Key;
 
-            var jsonAuthorizations = JsonSerializer.SerializeToString(authorizations);
-            var headerData = rsa.Encrypt(Encoding.ASCII.GetBytes(jsonAuthorizations), false);
+                var jsonAuthorizations = JsonSerializer.SerializeToString(authorizations);
+                var headerData = rsa.Encrypt(Encoding.ASCII.GetBytes(jsonAuthorizations), false);
 
-            var client = new JsonServiceClient(settings.ServiceBaseUri)
-                {
-                    LocalHttpWebRequestFilter =
-                        r =>
-                        r.Headers.Add(
-                            "Authorization",
-                            new AuthenticationHeaderValue("AppLink", Convert.ToBase64String(headerData)).ToString())
-                };
+                var client = new JsonServiceClient(settings.ServiceBaseUri)
+                    {
+                        LocalHttpWebRequestFilter =
+                            r =>
+                            r.Headers.Add(
+                                "Authorization",
+                                new AuthenticationHeaderValue("AppLink", Convert.ToBase64String(headerData)).ToString())
+                    };
 
-            return client.Get(request);
+                return client.Get(request);
+            }
+            else
+            {
+                throw new Exception("No certificates loaded!");
+            }
         }
     }
 }
