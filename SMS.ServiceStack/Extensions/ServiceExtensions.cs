@@ -94,7 +94,7 @@ namespace SMS.ServiceStack.Extensions
             return client.Get(request);
         }
 
-        public static TResponse AppLinkGet<TResponse>(this IServiceBase service, OAuthProxySettings settings, global::ServiceStack.ServiceHost.IReturn<TResponse> request, AppAuthorizations authorizations)
+        public static TResponse AppLinkGet<TResponse>(this OAuthProxySettings settings, global::ServiceStack.ServiceHost.IReturn<TResponse> request, AppAuthorizations authorizations)
         {
             var rsa = (RSACryptoServiceProvider)Certificates.ResourceCertificate.PublicKey.Key;
 
