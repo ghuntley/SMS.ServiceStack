@@ -14,7 +14,7 @@ namespace SMS.ServiceStack.Types
     /// <summary>
     /// TODO: Update summary.
     /// </summary>
-    public struct DateTimeUTC
+    public struct DateTimeUTC : IComparable, IComparable<DateTimeUTC>, IEquatable<DateTimeUTC>, IFormattable
     {
         private readonly DateTime dateTime;
 
@@ -112,6 +112,21 @@ namespace SMS.ServiceStack.Types
         public string ToString(string format)
         {
             return this.dateTime.ToString(format);
+        }
+
+        public string ToString(string format, IFormatProvider formatProvider)
+        {
+            return this.dateTime.ToString(format, formatProvider);
+        }
+
+        public int CompareTo(object obj)
+        {
+            return this.dateTime.CompareTo(obj);
+        }
+
+        public int CompareTo(DateTimeUTC other)
+        {
+            return this.dateTime.CompareTo(other.dateTime);
         }
     }
 }
