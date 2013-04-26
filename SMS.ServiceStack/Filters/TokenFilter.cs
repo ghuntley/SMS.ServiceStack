@@ -86,6 +86,11 @@ namespace CentralStation.Filter
 
                                 var authorizations = JsonSerializer.DeserializeFromString<AppAuthorizations>(jsonAuthorizations);
 
+                                if (authorizations.IssuedOn < DateTime.UtcNow.AddMinutes(-1))
+                                {
+                                    return;
+                                }
+
                                 this.SetSessionValues(
                                     req, resp, "AppLink", authorizations.Roles, authorizations.Permissions);
                             }
