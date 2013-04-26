@@ -9,13 +9,19 @@ namespace SMS.ServiceStack.Extensions
     using System;
     using System.Linq;
     using System.Net.Http.Headers;
+    using System.Security.Cryptography;
+    using System.Text;
 
     using DotNetOpenAuth.OAuth2;
+
+    using SMS.ServiceStack.Resource;
 
     using global::ServiceStack.ServiceClient.Web;
     using global::ServiceStack.ServiceInterface;
 
     using SMS.ServiceStack.Proxies;
+
+    using global::ServiceStack.Text;
 
     /// <summary>
     /// TODO: Update summary.
@@ -85,6 +91,25 @@ namespace SMS.ServiceStack.Extensions
                             }
                         }
                 };
+            return client.Get(request);
+        }
+
+        public static TResponse AppLinkGet<TResponse>(this IServiceBase service, OAuthProxySettings settings, global::ServiceStack.ServiceHost.IReturn<TResponse> request, AppAuthorizations authorizations)
+        {
+            var rsa = (RSACryptoServiceProvider)Certificates.ResourceCertificate.PublicKey.Key;
+
+            var jsonAuthorizations = JsonSerializer.SerializeToString(authorizations);
+            var headerData = rsa.Encrypt(Encoding.ASCII.GetBytes(jsonAuthorizations), false);
+
+            var client = new JsonServiceClient(settings.ServiceBaseUri)
+                {
+                    LocalHttpWebRequestFilter =
+                        r =>
+                        r.Headers.Add(
+                            "Authorization",
+                            new AuthenticationHeaderValue("AppLink", Convert.ToBase64String(headerData)).ToString())
+                };
+
             return client.Get(request);
         }
     }

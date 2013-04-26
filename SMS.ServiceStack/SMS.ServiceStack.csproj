@@ -112,6 +112,7 @@
     <Compile Include="Authorization\CustomOrmLiteAuthRepository.cs" />
     <Compile Include="Config\Options.cs" />
     <Compile Include="Config\Settings.cs" />
+    <Compile Include="Extensions\AppAuthorizations.cs" />
     <Compile Include="Extensions\ServiceExtensions.cs" />
     <Compile Include="Extensions\ScopeExtensions.cs" />
     <Compile Include="Filters\TokenFilter.cs" />
