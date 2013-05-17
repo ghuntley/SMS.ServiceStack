@@ -71,9 +71,9 @@ namespace CentralStation.Filter
                                 this.SetSessionValues(
                                     req, 
                                     resp, 
-                                    token.User, 
-                                    token.Scope.GetRolesFromScope(this.appSettings.Get("ApplicationId", string.Empty)),
-                                    token.Scope.GetPermissionsFromScope(this.appSettings.Get("ApplicationId", string.Empty)));
+                                    token.User,
+                                    token.Scope.GetRolesFromScope(),
+                                    token.Scope.GetPermissionsFromScope());
                                 
                                 log.Debug("OAuth authorization set");
                             }
