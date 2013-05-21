@@ -12,13 +12,13 @@ namespace SMS.ServiceStack.Extensions
         public static List<string> GetRolesFromScope(this HashSet<string> scopes, string clientIdentifier)
         {
             var prefix = string.Format("{0}/{1}/", clientIdentifier, RoleNamespace);
-            return scopes.Select(s => s.Replace(prefix, string.Empty)).ToList();
+            return scopes.Where(r => r.Contains(string.Format("/{0}/", RoleNamespace))).Select(s => s.Replace(prefix, string.Empty)).ToList();
         }
 
         public static List<string> GetPermissionsFromScope(this HashSet<string> scopes, string clientIdentifier)
         {
             var prefix = string.Format("{0}/{1}/", clientIdentifier, PermissionNamespace);
-            return scopes.Select(s => s.Replace(prefix, string.Empty)).ToList();
+            return scopes.Where(r => r.Contains(string.Format("/{0}/", PermissionNamespace))).Select(s => s.Replace(prefix, string.Empty)).ToList();
         }
 
         public static string TryResolveRequestingClient(this IEnumerable<string> scopes)
