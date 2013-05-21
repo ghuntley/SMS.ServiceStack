@@ -69,15 +69,15 @@ namespace CentralStation.Filter
 
 
                                 this.SetSessionValues(
-                                    req, 
-                                    resp, 
+                                    req,
+                                    resp,
                                     token.User,
-                                    token.Scope.GetRolesFromScope(),
-                                    token.Scope.GetPermissionsFromScope());
-                                
+                                    token.Scope.GetRolesFromScope(appSettings.GetString("ApplicationId")),
+                                    token.Scope.GetPermissionsFromScope(appSettings.GetString("ApplicationId")));
+
                                 log.Debug("OAuth authorization set");
                             }
-                            // Application link authentication
+                                // Application link authentication
                             else if (authHeader.Scheme == "AppLink")
                             {
                                 var rsa = (RSACryptoServiceProvider)Certificates.ResourceCertificate.PrivateKey;
