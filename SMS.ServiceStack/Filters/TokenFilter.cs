@@ -67,6 +67,7 @@ namespace CentralStation.Filter
                                         HttpRequestInfo.Create((HttpListenerRequest)req.OriginalRequest),
                                         new string[] { });
 
+
                                 this.SetSessionValues(
                                     req,
                                     resp,
@@ -109,18 +110,22 @@ namespace CentralStation.Filter
                 req.Cookies.Add(item.Key, new Cookie(item.Key, (string)item.Value));
             }
 
+            var sessionId = req.GetSessionId();
 
-            var session = req.GetSession();
-            session.UserName = userName;
-            session.UserAuthName = userName;
-            session.IsAuthenticated = true;
-            session.Roles = roles;
-            session.Permissions = permissions;
+            using (var cache = req.GetCacheClient())
+            {
+                var session = cache.GetSession(sessionId);
+                session.UserName = userName;
+                session.UserAuthName = userName;
+                session.IsAuthenticated = true;
+                session.Roles = roles;
+                session.Permissions = permissions;
 
-            session.ProviderOAuthAccess = new List<IOAuthTokens>
-                { new OAuthTokens { Provider = "credentials" } };
+                session.ProviderOAuthAccess = new List<IOAuthTokens>
+                    { new OAuthTokens { Provider = "credentials" } };
 
-            req.SaveSession(session);
+                cache.Add(SessionFeature.GetSessionKey(sessionId), session);
+            }
         }
     }
 }
