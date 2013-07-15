@@ -112,20 +112,16 @@ namespace CentralStation.Filter
 
             var sessionId = req.GetSessionId();
 
-            using (var cache = req.GetCacheClient())
-            {
-                var session = cache.GetSession(sessionId);
-                session.UserName = userName;
-                session.UserAuthName = userName;
-                session.IsAuthenticated = true;
-                session.Roles = roles;
-                session.Permissions = permissions;
+            var session = req.GetSession();
+            session.UserName = userName;
+            session.UserAuthName = userName;
+            session.IsAuthenticated = true;
+            session.Roles = roles;
+            session.Permissions = permissions;
 
-                session.ProviderOAuthAccess = new List<IOAuthTokens>
-                    { new OAuthTokens { Provider = "credentials" } };
+            session.ProviderOAuthAccess = new List<IOAuthTokens> { new OAuthTokens { Provider = "credentials" } };
 
-                cache.Add(SessionFeature.GetSessionKey(sessionId), session);
-            }
+            req.SaveSession(session);
         }
     }
 }
