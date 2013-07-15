@@ -16,7 +16,7 @@
     <RestorePackages>true</RestorePackages>
     <BUILD_NUMBER Condition="'$(BUILD_NUMBER)' == ''">0</BUILD_NUMBER>
     <Major>0</Major>
-    <Minor>1</Minor>
+    <Minor>2</Minor>
     <Patch>0</Patch>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -176,7 +176,7 @@
         <_Parameter1>$(Major).$(Minor).$(Patch).$(BUILD_NUMBER)</_Parameter1>
       </AssemblyAttributes>
       <AssemblyAttributes Include="AssemblyInformationalVersion">
-        <_Parameter1>$(Major).$(Minor).$(Patch).$(BUILD_NUMBER)</_Parameter1>
+        <_Parameter1>$(Major).$(Minor).$(Patch)-build$(BUILD_NUMBER)</_Parameter1>
       </AssemblyAttributes>
     </ItemGroup>
     <WriteCodeFragment Language="C#" OutputFile="Properties\AssemblyInfo.cs" AssemblyAttributes="@(AssemblyAttributes)" />
